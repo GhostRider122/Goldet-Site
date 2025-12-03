@@ -1,48 +1,139 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>Goldet — Admin Panel</title>
-  <link rel="stylesheet" href="styles.css">
+  <title>Goldet Admin Panel</title>
   <style>
-    .main-area h2 { font-family: "Fredoka One"; color:#a7740c; margin-bottom:24px; }
-    .user-card { background: linear-gradient(180deg,#fff7dc,#f3e2b7); padding:18px; border-radius:12px; margin-bottom:16px; box-shadow:0 8px 20px rgba(0,0,0,0.05); }
-    .user-card input { width: 60px; margin-left:6px; border-radius:6px; padding:4px; border:1px solid #caa247; }
-    .btn.save { margin-top:8px; background:linear-gradient(180deg,#e6b23a,#d69a00); color:#fff; border:none; padding:6px 12px; border-radius:8px; cursor:pointer; }
-    .game-settings { margin-top:32px; background:#fff8e2; padding:18px; border-radius:12px; box-shadow:0 8px 20px rgba(0,0,0,0.05); }
-    .game-settings input { width:80px; margin-left:8px; border-radius:6px; padding:4px; border:1px solid #caa247; }
+    body {
+      background: #faf2da;
+      font-family: Arial;
+      padding: 20px;
+    }
+    .user-card {
+      background: white;
+      padding: 16px;
+      border-radius: 10px;
+      margin-bottom: 14px;
+      border: 1px solid #cab27a;
+    }
+    .btn {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-left: 4px;
+    }
+    .save { background:#8c6f2f; color:white; }
+    .delete { background:#c0392b; color:white; }
+    .approve { background:#27ae60; color:white; }
+    .decline { background:#e67e22; color:white; }
   </style>
 </head>
 <body>
-<div class="dashboard-page">
 
-  <!-- Sidebar -->
-  <nav class="sidebar">
-    <div class="logo">Goldet Admin</div>
-    <div class="side-link" onclick="window.location.href='dashboard.html'">⬅ Back</div>
-  </nav>
+<h1>Goldet Admin Panel</h1>
+<p id="status"></p>
 
-  <!-- Main Area -->
-  <main class="main-area">
-    <h2>Admin Panel</h2>
+<div id="usersContainer"></div>
 
-    <section class="stats-box">
-      <h3>Edit Users</h3>
-      <div id="usersList"></div>
-    </section>
+<script type="module">
+import { auth, db, onAuthStateChanged } from "./firebase.js";
+import {
+  collection,
+  getDocs,
+  updateDoc,
+  deleteDoc,
+  doc
+} from "firebase/firestore";
 
-    <section class="game-settings">
-      <h3>Edit Game Settings</h3>
-      <label>Default Pack Tokens:</label>
-      <input type="number" id="packTokens" placeholder="Tokens per pack">
-      <button id="saveGameSettings" class="btn save">Save Settings</button>
-    </section>
+// Allowed admin usernames
+const allowedAdmins = ["AdminMaster", "GhostRider", "YourUsernameHere"];
 
-  </main>
+const usersContainer = document.getElementById("usersContainer");
+const status = document.getElementById("status");
 
-</div>
+// Check if admin
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    status.textContent = "Not logged in.";
+    return;
+  }
 
-<script type="module" src="admin.js"></script>
+  const snap = await getDocs(collection(db, "users"));
+  let adminUser = null;
+
+  snap.forEach(d => {
+    if (d.id === user.uid) {
+      adminUser = d.data();
+    }
+  });
+
+  if (!adminUser) return status.textContent = "Account not in database.";
+
+  if (!allowedAdmins.includes(adminUser.username)) {
+    return status.textContent = "You do NOT have permission to access the admin panel.";
+  }
+
+  status.textContent = "Welcome, admin: " + adminUser.username;
+  loadUsers();
+});
+
+async function loadUsers() {
+  usersContainer.innerHTML = "<h2>Loading users...</h2>";
+
+  const snap = await getDocs(collection(db, "users"));
+  usersContainer.innerHTML = "";
+
+  snap.forEach((u) => {
+    const data = u.data();
+    const div = document.createElement("div");
+    div.className = "user-card";
+
+    div.innerHTML = `
+      <h3>${data.username}</h3>
+      <p><b>Email:</b> <input id="email-${u.id}" value="${data.email}"></p>
+      <p><b>Username:</b> <input id="username-${u.id}" value="${data.username}"></p>
+      <p><b>Tokens:</b> <input id="tokens-${u.id}" type="number" value="${data.tokens || 0}"></p>
+      <p><b>Golds Unlocked:</b> <input id="golds-${u.id}" type="number" value="${data.goldsUnlocked || 0}"></p>
+      <p><b>Packs Opened:</b> <input id="packs-${u.id}" type="number" value="${data.packsOpened || 0}"></p>
+      <p><b>Messages Sent:</b> <input id="messages-${u.id}" type="number" value="${data.messagesSent || 0}"></p>
+      <p><b>Admin:</b> <input id="admin-${u.id}" type="checkbox" ${data.isAdmin ? "checked" : ""}></p>
+      <p><b>Approved:</b> <input id="approved-${u.id}" type="checkbox" ${data.approved ? "checked" : ""}></p>
+
+      <button class="btn save" onclick="saveUser('${u.id}')">Save</button>
+      <button class="btn delete" onclick="deleteUser('${u.id}')">Delete</button>
+    `;
+
+    usersContainer.appendChild(div);
+  });
+}
+
+// SAVE CHANGES
+window.saveUser = async (uid) => {
+  const ref = doc(db, "users", uid);
+
+  await updateDoc(ref, {
+    email: document.getElementById(`email-${uid}`).value,
+    username: document.getElementById(`username-${uid}`).value,
+    tokens: Number(document.getElementById(`tokens-${uid}`).value),
+    goldsUnlocked: Number(document.getElementById(`golds-${uid}`).value),
+    packsOpened: Number(document.getElementById(`packs-${uid}`).value),
+    messagesSent: Number(document.getElementById(`messages-${uid}`).value),
+    isAdmin: document.getElementById(`admin-${uid}`).checked,
+    approved: document.getElementById(`approved-${uid}`).checked
+  });
+
+  alert("User updated!");
+};
+
+// DELETE USER
+window.deleteUser = async (uid) => {
+  if (!confirm("Delete this user?")) return;
+
+  await deleteDoc(doc(db, "users", uid));
+  alert("User deleted.");
+  loadUsers();
+};
+</script>
+
 </body>
 </html>
