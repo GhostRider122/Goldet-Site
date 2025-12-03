@@ -1,5 +1,5 @@
 import { auth, onAuthStateChanged, db } from './firebase.js';
-import { doc, onSnapshot } from "firebase/firestore";
+import { doc, onSnapshot } from "/firebase/firestore";
 
 const usernameField = document.getElementById('usernameField');
 const rankField = document.getElementById('rankField');
