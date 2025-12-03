@@ -66,8 +66,10 @@
 </div>
 
 <script type="module">
-import { auth, db, onAuthStateChanged } from './firebase.js';
-import { collection, getDocs, updateDoc, deleteDoc, doc } from "firebase/firestore";
+import { auth, db } from './firebase.js';
+import { collection, getDocs, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+
 
 const allowedAdmins = ["AdminMaster","GoldetOwner","YourUsernameHere"];
 const usersContainer = document.getElementById("usersContainer");
