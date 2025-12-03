@@ -1,0 +1,20 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Goldet — Inventory</title><link rel="stylesheet" href="styles.css"></head><body>
+<div class="dashboard-page">
+<nav class="sidebar"><div class="logo">Goldet</div>
+  <div class="side-link" onclick="location.href='dashboard.html'">🏆 Stats</div>
+  <div class="side-link" onclick="location.href='leaderboard.html'">📋 Leaderboard</div>
+  <div class="side-link" onclick="location.href='chat.html'">💬 Chat</div>
+  <div class="side-link" onclick="location.href='clans.html'">👥 Clans</div>
+  <div class="side-link" onclick="location.href='market.html'">🛒 Market</div>
+  <div class="side-link" onclick="location.href='inventory.html'">📦 Inventory</div>
+  <div class="side-link" onclick="logout()">🔓 Logout</div>
+</nav>
+<main class="main-area">
+  <div class="top-userbar"><div class="user-card"><div class="pfp"></div><div><h2 id="usernameField">Loading...</h2><span style="color:#7a6534;font-size:14px;" id="rankField">...</span></div></div></div>
+  <section class="section-box"><div class="friends-title">Inventory</div><div id="inventoryList"></div></section>
+</main>
+</div>
+<script type="module" src="firebase.js"></script>
+<script type="module" src="inventory.js"></script>
+</body></html>
