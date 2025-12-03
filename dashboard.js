@@ -119,3 +119,52 @@ async function sendFriendRequest() {
   alert('Friend request sent!');
 }
 
+const friendRequestsList = document.getElementById('friendRequestsList');
+
+function renderFriendRequests(userData) {
+  friendRequestsList.innerHTML = '';
+  if (userData.friendRequests && userData.friendRequests.length) {
+    userData.friendRequests.forEach(async uid => {
+      const fSnap = await getDoc(doc(db, 'users', uid));
+      if (!fSnap.exists()) return;
+      const d = fSnap.data();
+      const div = document.createElement('div');
+      div.className = 'friend-item';
+      div.innerHTML = `<span>${d.username}</span>`;
+
+      const acceptBtn = document.createElement('button');
+      acceptBtn.textContent = 'Accept';
+      acceptBtn.className = 'btn save';
+      acceptBtn.style.marginLeft = '6px';
+      acceptBtn.onclick = async () => {
+        await updateDoc(doc(db, 'users', userData.uid), {
+          friends: arrayUnion(uid),
+          friendRequests: arrayRemove(uid)
+        });
+        await updateDoc(doc(db, 'users', uid), {
+          friends: arrayUnion(userData.uid)
+        });
+        loadUserData(); // reload your stats and friends
+      };
+
+      const declineBtn = document.createElement('button');
+      declineBtn.textContent = 'Decline';
+      declineBtn.className = 'btn decline';
+      declineBtn.style.marginLeft = '6px';
+      declineBtn.onclick = async () => {
+        await updateDoc(doc(db, 'users', userData.uid), {
+          friendRequests: arrayRemove(uid)
+        });
+        loadUserData();
+      };
+
+      div.appendChild(acceptBtn);
+      div.appendChild(declineBtn);
+      friendRequestsList.appendChild(div);
+    });
+  } else {
+    friendRequestsList.innerHTML = `<p style="color:#7a6534;">No pending requests</p>`;
+  }
+}
+
+
