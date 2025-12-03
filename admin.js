@@ -1,31 +1,77 @@
-import { auth, db, onAuthStateChanged } from './firebase.js';
-import { collection, doc, getDocs, updateDoc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
+import { auth, db, onAuthStateChanged, signOut } from './firebase.js';
+import { collection, doc, getDocs, getDoc, updateDoc, setDoc, onSnapshot } from "firebase/firestore";
 
+const pendingUsersList = document.getElementById('pendingUsersList');
 const usersList = document.getElementById('usersList');
 const packTokensInput = document.getElementById('packTokens');
 const saveSettingsBtn = document.getElementById('saveGameSettings');
+const logoutBtn = document.getElementById('logoutBtn');
 
-let userRef;
+let currentUserRef;
+
+// Logout
+logoutBtn.addEventListener('click', async () => {
+  await signOut(auth);
+  window.location.href = 'login.html';
+});
 
 // Check admin access
 onAuthStateChanged(auth, async user => {
   if (!user) { window.location.href = 'login.html'; return; }
 
-  userRef = doc(db, 'users', user.uid);
-  const docSnap = await getDoc(userRef);
-
-  if (!docSnap.exists() || !docSnap.data().isAdmin) {
+  currentUserRef = doc(db, 'users', user.uid);
+  const userSnap = await getDoc(currentUserRef);
+  if (!userSnap.exists() || !userSnap.data().isAdmin) {
     alert('Access denied. Admins only.');
     window.location.href = 'dashboard.html';
     return;
   }
 
-  loadUsers();
+  loadPendingUsers();
+  loadExistingUsers();
   loadGameSettings();
 });
 
-// Load all users with editable stats
-async function loadUsers() {
+// Pending users
+async function loadPendingUsers() {
+  const usersSnap = await getDocs(collection(db, 'users'));
+  pendingUsersList.innerHTML = '';
+  let hasPending = false;
+
+  usersSnap.forEach(u => {
+    const d = u.data();
+    if (d.approved === false) {
+      hasPending = true;
+      const div = document.createElement('div');
+      div.className = 'user-card';
+      div.innerHTML = `
+        <strong>${d.username || 'User'}</strong><br>
+        Email: ${d.email || 'N/A'}<br>
+        <button class="btn save" onclick="approveUser('${u.id}')">Approve</button>
+        <button class="btn decline" onclick="declineUser('${u.id}')">Decline</button>
+      `;
+      pendingUsersList.appendChild(div);
+    }
+  });
+
+  if (!hasPending) pendingUsersList.innerHTML = `<p style="color:#7a6534;">No pending users</p>`;
+}
+
+// Approve/Decline users
+window.approveUser = async (uid) => {
+  const uRef = doc(db, 'users', uid);
+  await updateDoc(uRef, { approved: true });
+  loadPendingUsers();
+};
+
+window.declineUser = async (uid) => {
+  const uRef = doc(db, 'users', uid);
+  await updateDoc(uRef, { approved: false }); // could also delete
+  loadPendingUsers();
+};
+
+// Load and edit existing users
+async function loadExistingUsers() {
   const usersSnap = await getDocs(collection(db, 'users'));
   usersList.innerHTML = '';
   usersSnap.forEach(u => {
@@ -44,7 +90,6 @@ async function loadUsers() {
   });
 }
 
-// Save individual user
 window.saveUser = async (uid) => {
   const tokens = Number(document.getElementById(`tokens-${uid}`).value);
   const golds = Number(document.getElementById(`golds-${uid}`).value);
@@ -54,10 +99,10 @@ window.saveUser = async (uid) => {
   const uRef = doc(db, 'users', uid);
   await updateDoc(uRef, { tokens, goldsUnlocked: golds, packsOpened: packs, messagesSent: messages });
   alert('User updated!');
-}
+};
 
 // Load game settings
-async function loadGameSettings() {
+function loadGameSettings() {
   const settingsRef = doc(db, 'gameSettings', 'default');
   onSnapshot(settingsRef, docSnap => {
     if (!docSnap.exists()) return;
