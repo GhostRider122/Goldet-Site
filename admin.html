@@ -12,23 +12,19 @@
     background-size: 280px;
     background-repeat: repeat;
     background-attachment: fixed;
-    margin: 0;
+    margin:0;
+    font-family: 'Inter', sans-serif;
   }
   .dashboard-page { display:flex; min-height:100vh; }
-  .sidebar {
-    width:240px; background:linear-gradient(180deg,#e4c57a,#caa247);
-    padding:28px 18px; box-shadow:4px 0 16px rgba(0,0,0,0.15); position:relative; z-index:10;
-  }
+  .sidebar { width:240px; background:linear-gradient(180deg,#e4c57a,#caa247); padding:28px 18px; box-shadow:4px 0 16px rgba(0,0,0,0.15); }
   .sidebar .logo { font-family:"Fredoka One"; font-size:38px; color:#6a4d11; margin-bottom:28px; }
   .side-link { display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:8px; font-weight:600; margin-bottom:8px; cursor:pointer; color:#4f3e12; background:rgba(255,255,255,0.18); transition:0.15s; }
   .side-link:hover { background:rgba(255,255,255,0.32); }
-
   .main-area { flex:1; padding:28px 38px; }
   .top-userbar { display:flex; justify-content:space-between; align-items:center; margin-bottom:28px; }
   .user-card { display:flex; align-items:center; gap:18px; background:linear-gradient(180deg,#fff3d5,#f1d79b); padding:14px 20px; border-radius:12px; box-shadow:0 8px 22px rgba(0,0,0,0.08); }
   .user-card h2 { margin:0; font-family:"Fredoka One"; color:#a7740c; font-size:26px; }
-
-  .admin-search { margin-bottom:20px; }
+  .admin-search { margin-bottom:20px; padding:8px; width:100%; border-radius:8px; border:1px solid #cab27a; }
   .user-panel { background:#fff8e2; border-radius:14px; padding:16px 22px; box-shadow:0 8px 22px rgba(0,0,0,0.08); margin-bottom:16px; }
   .user-panel input[type="text"], .user-panel input[type="number"] { width:80px; padding:4px; border-radius:6px; border:1px solid #cab27a; }
   .btn { padding:6px 12px; border:none; border-radius:6px; cursor:pointer; margin-left:6px; font-weight:600; }
@@ -36,6 +32,7 @@
   .btn.delete { background:#c0392b; color:white; }
   .btn.approve { background:#27ae60; color:white; }
   .btn.decline { background:#e67e22; color:white; }
+  .btn.friend { background:#3498db; color:white; }
 </style>
 </head>
 <body>
@@ -72,31 +69,35 @@
 
 <script type="module">
 import { auth, db, onAuthStateChanged } from './firebase.js';
-import { collection, getDocs, updateDoc, deleteDoc, doc, query, where } from "firebase/firestore";
+import { collection, getDocs, updateDoc, deleteDoc, doc } from "firebase/firestore";
 
 const allowedAdmins = ["AdminMaster","GoldetOwner","YourUsernameHere"];
 const usersContainer = document.getElementById("usersContainer");
 const searchUser = document.getElementById("searchUser");
 
-// Load users
+let usersCache = []; // cache all users for filtering
+
 async function loadUsers(filter="") {
   usersContainer.innerHTML = "";
-  const snap = await getDocs(collection(db, "users"));
-  snap.forEach(u => {
-    const data = u.data();
-    if (filter && !data.username.toLowerCase().includes(filter.toLowerCase())) return;
+  usersCache.forEach(u => {
+    const data = u.data;
+    if(filter && !data.username.toLowerCase().includes(filter.toLowerCase())) return;
 
     const div = document.createElement("div");
     div.className = "user-panel";
     div.innerHTML = `
       <h3>${data.username}</h3>
       <p>Email: <input id="email-${u.id}" value="${data.email || ''}"></p>
+      <p>Rank: <input id="rank-${u.id}" value="${data.rank || ''}"></p>
       <p>Tokens: <input type="number" id="tokens-${u.id}" value="${data.tokens || 0}"></p>
       <p>Golds Unlocked: <input type="number" id="golds-${u.id}" value="${data.goldsUnlocked || 0}"></p>
       <p>Packs Opened: <input type="number" id="packs-${u.id}" value="${data.packsOpened || 0}"></p>
       <p>Messages Sent: <input type="number" id="messages-${u.id}" value="${data.messagesSent || 0}"></p>
+      <p>Friends: ${data.friends ? data.friends.join(", ") : ""}</p>
+      <p>Friend Requests: ${data.friendRequests ? data.friendRequests.join(", ") : ""}</p>
       <p>Admin: <input type="checkbox" id="admin-${u.id}" ${data.isAdmin ? "checked" : ""}></p>
       <p>Approved: <input type="checkbox" id="approved-${u.id}" ${data.approved ? "checked" : ""}></p>
+
       <button class="btn save" onclick="saveUser('${u.id}')">Save</button>
       <button class="btn delete" onclick="deleteUser('${u.id}')">Delete</button>
     `;
@@ -104,11 +105,12 @@ async function loadUsers(filter="") {
   });
 }
 
-// Save user
+// Save user edits
 window.saveUser = async uid => {
   const ref = doc(db, "users", uid);
   await updateDoc(ref, {
     email: document.getElementById(`email-${uid}`).value,
+    rank: document.getElementById(`rank-${uid}`).value,
     tokens: Number(document.getElementById(`tokens-${uid}`).value),
     goldsUnlocked: Number(document.getElementById(`golds-${uid}`).value),
     packsOpened: Number(document.getElementById(`packs-${uid}`).value),
@@ -117,30 +119,43 @@ window.saveUser = async uid => {
     approved: document.getElementById(`approved-${uid}`).checked
   });
   alert("User updated!");
+  await cacheUsers();
+  loadUsers(searchUser.value);
 };
 
 // Delete user
 window.deleteUser = async uid => {
-  if (!confirm("Delete this user?")) return;
-  await deleteDoc(doc(db, "users", uid));
-  alert("User deleted.");
-  loadUsers();
+  if(!confirm("Delete this user?")) return;
+  await deleteDoc(doc(db,"users",uid));
+  alert("User deleted!");
+  await cacheUsers();
+  loadUsers(searchUser.value);
 };
 
-// Search
+// Cache all users for fast search
+async function cacheUsers() {
+  const snap = await getDocs(collection(db,"users"));
+  usersCache = [];
+  snap.forEach(u => {
+    usersCache.push({ id: u.id, data: u.data() });
+  });
+}
+
+// Search bar filter
 searchUser.addEventListener("input", () => {
   loadUsers(searchUser.value);
 });
 
-// Check admin access
+// Admin access check
 onAuthStateChanged(auth, async user => {
-  if (!user) return alert("Not logged in.");
+  if(!user) return alert("Not logged in.");
   const docSnap = await (await import("firebase/firestore")).getDoc(doc(db,"users",user.uid));
-  if (!docSnap.exists() || !allowedAdmins.includes(docSnap.data().username)) {
+  if(!docSnap.exists() || !allowedAdmins.includes(docSnap.data().username)) {
     alert("You do NOT have permission to access this page.");
     window.location.href = "login.html";
     return;
   }
+  await cacheUsers();
   loadUsers();
 });
 </script>
