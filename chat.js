@@ -1,35 +1,44 @@
-import { auth, onAuthStateChanged, getUserData, sendMessage, listenMessages } from './firebase.js';
+import { auth, db, collection, addDoc, onSnapshot, query, orderBy, onAuthStateChanged, doc, updateDoc, increment } from './firebase.js';
 
-const usernameField = document.getElementById('usernameField');
 const messagesList = document.getElementById('messagesList');
-const messageInput = document.getElementById('messageInput');
-const sendBtn = document.getElementById('sendBtn');
-
-let currentUser = null;
-let userData = null;
+const chatForm = document.getElementById('chatForm');
+let currentUserRef;
 
 onAuthStateChanged(auth, async user => {
-  if (!user) { window.location.href = 'login.html'; return; }
-  currentUser = user;
-  usernameField.textContent = user.displayName ?? 'Player';
-  userData = await getUserData(user.uid, user.displayName);
-});
+  if (!user) {
+    window.location.href = 'login.html';
+    return;
+  }
 
-// realtime listener
-listenMessages((msgs) => {
-  messagesList.innerHTML = '';
-  msgs.forEach(msg => {
-    const div = document.createElement('div');
-    div.className = 'message';
-    div.innerHTML = `<strong>${msg.username}:</strong> ${msg.text}`;
-    messagesList.appendChild(div);
+  currentUserRef = doc(db, 'users', user.uid);
+
+  // Load chat messages in real-time
+  const q = query(collection(db, 'chat'), orderBy('timestamp'));
+  onSnapshot(q, snapshot => {
+    messagesList.innerHTML = '';
+    snapshot.forEach(doc => {
+      const msg = doc.data();
+      const div = document.createElement('div');
+      div.innerHTML = `<strong>${msg.username}:</strong> ${msg.text}`;
+      messagesList.appendChild(div);
+    });
   });
-  messagesList.scrollTop = messagesList.scrollHeight;
 });
 
-sendBtn.addEventListener('click', async () => {
-  const text = messageInput.value.trim();
+chatForm.addEventListener('submit', async e => {
+  e.preventDefault();
+  const text = chatForm.message.value;
   if (!text) return;
-  await sendMessage(currentUser.uid, currentUser.displayName || userData.username, text);
-  messageInput.value = '';
+
+  // Add chat message
+  await addDoc(collection(db, 'chat'), {
+    username: auth.currentUser.email,
+    text: text,
+    timestamp: new Date()
+  });
+
+  // Increment messagesSent stat
+  await updateDoc(currentUserRef, { messagesSent: increment(1) });
+
+  chatForm.message.value = '';
 });
