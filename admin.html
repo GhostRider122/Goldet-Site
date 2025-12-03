@@ -5,35 +5,44 @@
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
   <title>Goldet — Admin Panel</title>
   <link rel="stylesheet" href="styles.css">
+  <style>
+    .main-area h2 { font-family: "Fredoka One"; color:#a7740c; margin-bottom:24px; }
+    .user-card { background: linear-gradient(180deg,#fff7dc,#f3e2b7); padding:18px; border-radius:12px; margin-bottom:16px; box-shadow:0 8px 20px rgba(0,0,0,0.05); }
+    .user-card input { width: 60px; margin-left:6px; border-radius:6px; padding:4px; border:1px solid #caa247; }
+    .btn.save { margin-top:8px; background:linear-gradient(180deg,#e6b23a,#d69a00); color:#fff; border:none; padding:6px 12px; border-radius:8px; cursor:pointer; }
+    .game-settings { margin-top:32px; background:#fff8e2; padding:18px; border-radius:12px; box-shadow:0 8px 20px rgba(0,0,0,0.05); }
+    .game-settings input { width:80px; margin-left:8px; border-radius:6px; padding:4px; border:1px solid #caa247; }
+  </style>
 </head>
 <body>
-  <div class="dashboard-page">
+<div class="dashboard-page">
 
-    <!-- Sidebar (same as dashboard) -->
-    <nav class="sidebar">
-      <div class="logo">Goldet Admin</div>
-      <div class="side-link" onclick="window.location.href='dashboard.html'">⬅ Back</div>
-    </nav>
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <div class="logo">Goldet Admin</div>
+    <div class="side-link" onclick="window.location.href='dashboard.html'">⬅ Back</div>
+  </nav>
 
-    <!-- Main area -->
-    <main class="main-area">
-      <h2>Admin Panel</h2>
+  <!-- Main Area -->
+  <main class="main-area">
+    <h2>Admin Panel</h2>
 
-      <section class="stats-box">
-        <h3>Edit Users</h3>
-        <div id="usersList"></div>
-      </section>
+    <section class="stats-box">
+      <h3>Edit Users</h3>
+      <div id="usersList"></div>
+    </section>
 
-      <section class="stats-box">
-        <h3>Edit Game Settings</h3>
-        <label>Default Pack Tokens:</label>
-        <input type="number" id="packTokens" placeholder="Tokens per pack">
-        <button id="saveGameSettings" class="btn filled">Save Settings</button>
-      </section>
+    <section class="game-settings">
+      <h3>Edit Game Settings</h3>
+      <label>Default Pack Tokens:</label>
+      <input type="number" id="packTokens" placeholder="Tokens per pack">
+      <button id="saveGameSettings" class="btn save">Save Settings</button>
+    </section>
 
-    </main>
-  </div>
+  </main>
 
-  <script type="module" src="admin.js"></script>
+</div>
+
+<script type="module" src="admin.js"></script>
 </body>
 </html>
