@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Goldet — Admin Panel</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="dashboard-page">
+
+    <!-- Sidebar (same as dashboard) -->
+    <nav class="sidebar">
+      <div class="logo">Goldet Admin</div>
+      <div class="side-link" onclick="window.location.href='dashboard.html'">⬅ Back</div>
+    </nav>
+
+    <!-- Main area -->
+    <main class="main-area">
+      <h2>Admin Panel</h2>
+
+      <section class="stats-box">
+        <h3>Edit Users</h3>
+        <div id="usersList"></div>
+      </section>
+
+      <section class="stats-box">
+        <h3>Edit Game Settings</h3>
+        <label>Default Pack Tokens:</label>
+        <input type="number" id="packTokens" placeholder="Tokens per pack">
+        <button id="saveGameSettings" class="btn filled">Save Settings</button>
+      </section>
+
+    </main>
+  </div>
+
+  <script type="module" src="admin.js"></script>
+</body>
+</html>
