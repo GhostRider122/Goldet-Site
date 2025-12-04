@@ -1,20 +1,51 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Goldet — Market</title><link rel="stylesheet" href="styles.css"></head><body>
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Goldet — Market</title>
+  <link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+<script src="firebase.js"></script>
+
 <div class="dashboard-page">
-<nav class="sidebar"><div class="logo">Goldet</div>
-  <div class="side-link" onclick="location.href='dashboard.html'">🏆 Stats</div>
-  <div class="side-link" onclick="location.href='leaderboard.html'">📋 Leaderboard</div>
-  <div class="side-link" onclick="location.href='chat.html'">💬 Chat</div>
-  <div class="side-link" onclick="location.href='clans.html'">👥 Clans</div>
-  <div class="side-link" onclick="location.href='market.html'">🛒 Market</div>
-  <div class="side-link" onclick="location.href='inventory.html'">📦 Inventory</div>
-  <div class="side-link" onclick="logout()">🔓 Logout</div>
-</nav>
-<main class="main-area">
-  <div class="top-userbar"><div class="user-card"><div class="pfp"></div><div><h2 id="usernameField">Loading...</h2><span style="color:#7a6534;font-size:14px;" id="rankField">...</span></div></div></div>
-  <section class="section-box"><div class="friends-title">Market Items</div><div id="marketList"></div></section>
-</main>
+  <nav class="sidebar"><div class="logo">Goldet</div></nav>
+  <main class="main-area">
+    <div class="top-userbar"><div class="user-card"><h2>Market</h2></div></div>
+    <section class="stats-box" id="marketBox">
+      <div class="card"><h3>Packs (50 tokens)</h3><p>Open to get golds.</p><button class="btn primary" id="buyPack">Buy Pack</button></div>
+      <div class="card"><h3>Token Pack (200 tokens)</h3><p>Give you 250 tokens.</p><button class="btn" id="buyTokens">Buy Tokens</button></div>
+    </section>
+  </main>
 </div>
-<script type="module" src="firebase.js"></script>
-<script type="module" src="market.js"></script>
-</body></html>
+
+<script>
+document.addEventListener('GoldetDBReady', ()=> {
+  const db = GoldetDB.db; const current = GoldetDB.sessionGet();
+  if(!current) { window.location.href='login.html'; return; }
+
+  document.getElementById('buyPack').addEventListener('click', async ()=>{
+    const ref = db.ref('users/' + current);
+    const snap = await ref.get();
+    if(!snap.exists()) return alert('User not found');
+    const u = snap.val();
+    if((u.tokens||0) < 50) return alert('Not enough tokens');
+    const newTokens = (u.tokens||0) - 50;
+    await ref.update({ tokens: newTokens, packsOpened: (u.packsOpened||0)+1, goldsUnlocked: (u.goldsUnlocked||0)+1 });
+    alert('Pack opened! You got 1 gold.');
+  });
+
+  document.getElementById('buyTokens').addEventListener('click', async ()=>{
+    const ref = db.ref('users/' + current);
+    const snap = await ref.get();
+    if(!snap.exists()) return alert('User not found');
+    const u = snap.val();
+    // Here would be a real payment flow. We simulate a purchase for demo:
+    const add = 250;
+    await ref.update({ tokens: (u.tokens||0) + add });
+    alert('Purchased ' + add + ' tokens.');
+  });
+});
+</script>
+</body>
+</html>
