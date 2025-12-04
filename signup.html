@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Signup | Goldet</title>
+<link href="https://fonts.googleapis.com/css2?family=Titan+One&display=swap" rel="stylesheet"/>
+<style>
+  body{margin:0;font-family:Arial,Helvetica,sans-serif;background:linear-gradient(135deg,#f4d7a6,#e5b34a);color:#3b2d10;display:flex;align-items:center;justify-content:center;height:100vh}
+  .box{background:#d68912;padding:22px;border-radius:12px; width:100%;max-width:420px;color:white; box-shadow:0 10px 30px rgba(0,0,0,0.12)}
+  h1{font-family:'Titan One',cursive;margin:0 0 12px 0}
+  input, textarea, select { width:100%; padding:10px; margin-bottom:12px; border-radius:8px; border:none; font-size:15px }
+  button{width:100%;padding:12px;border-radius:10px;border:none;background:#fff3e0;color:#a75c00;font-family:'Titan One',cursive;font-size:16px;cursor:pointer}
+  .alert{margin-top:10px;padding:8px;border-radius:8px;display:none}
+</style>
+</head>
+<body>
+  <div class="box">
+    <h1>Goldet Signup</h1>
+
+    <form id="signup-form">
+      <div id="step-1" class="step active">
+        <input id="username" placeholder="Create Username" required />
+        <input type="password" id="password" placeholder="Create Password" required />
+        <button type="button" id="nextBtn">Next</button>
+      </div>
+
+      <div id="step-2" class="step" style="display:none">
+        <input id="age" placeholder="Age" required />
+        <input id="discord" placeholder="Discord (optional)" />
+        <textarea id="whyPlay" placeholder="Why do you want to play Goldet?" required></textarea>
+        <button type="submit">Submit Signup</button>
+      </div>
+    </form>
+
+    <div id="alert" class="alert"></div>
+  </div>
+
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+<script>
+  /***** REPLACE with your Goldet Firebase config *****/
+  const firebaseConfig = {
+    apiKey: "REPLACE_WITH_YOUR_API_KEY",
+    authDomain: "REPLACE_WITH_AUTHDOMAIN",
+    databaseURL: "https://REPLACE_WITH_DB.firebaseio.com",
+    projectId: "REPLACE_PROJECT_ID",
+    storageBucket: "REPLACE_BUCKET",
+    messagingSenderId: "REPLACE_SENDER_ID",
+    appId: "REPLACE_APP_ID"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  // UI
+  const step1 = document.getElementById('step-1');
+  const step2 = document.getElementById('step-2');
+  const nextBtn = document.getElementById('nextBtn');
+  const form = document.getElementById('signup-form');
+  const alertEl = document.getElementById('alert');
+
+  nextBtn.onclick = () => {
+    const u = document.getElementById('username').value.trim();
+    const p = document.getElementById('password').value;
+    if (!u || !p) return showAlert('Please choose a username and password.');
+    step1.style.display = 'none';
+    step2.style.display = 'block';
+  };
+
+  function showAlert(msg, success=false) {
+    alertEl.textContent = msg;
+    alertEl.style.display = 'block';
+    alertEl.style.background = success ? "rgba(40,180,40,0.45)" : "rgba(255,0,0,0.35)";
+    setTimeout(()=> alertEl.style.display='none', 3500);
+  }
+
+  // SHA-256 hashing function
+  async function hashPassword(password) {
+    const enc = new TextEncoder();
+    const data = enc.encode(password);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2,'0')).join('');
+  }
+
+  form.onsubmit = async (e) => {
+    e.preventDefault();
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value;
+    const age = document.getElementById('age').value.trim();
+    const discord = document.getElementById('discord').value.trim();
+    const whyPlay = document.getElementById('whyPlay').value.trim();
+
+    if (!username || !password || !age || !whyPlay) {
+      return showAlert('Please fill out all fields.');
+    }
+
+    const hashed = await hashPassword(password);
+
+    // Check if form already exists
+    const formRef = db.ref('forms/' + username);
+    const snap = await formRef.get();
+    if (snap.exists()) return showAlert('Username already submitted.');
+
+    // Save form to Firebase Realtime Database
+    await formRef.set({
+      password: hashed,
+      age,
+      discord,
+      whyPlay,
+      status: 'pending',
+      createdAt: Date.now()
+    });
+
+    showAlert('Signup submitted! Waiting for approval...', true);
+
+    // Listen for approval
+    const statusRef = db.ref('forms/' + username + '/status');
+    statusRef.on('value', async (s) => {
+      const val = s.val();
+      if (val === 'approved' || val === 'accepted') {
+        showAlert('✅ Approved! Redirecting...', true);
+        // set session localStorage and if users node doesn't exist create it
+        localStorage.setItem('goldetCurrentUser', username);
+        setTimeout(()=> window.location.href = 'dashboard.html', 1400);
+      } else if (val === 'declined') {
+        showAlert('❌ Signup declined.');
+      }
+    });
+  };
+</script>
+</body>
+</html>
