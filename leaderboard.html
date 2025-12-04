@@ -1,30 +1,41 @@
 <!doctype html>
-<html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Goldet — Leaderboard</title><link rel="stylesheet" href="styles.css"></head>
+<html>
+<head>
+  <meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Goldet — Leaderboard</title>
+  <link rel="stylesheet" href="styles.css"/>
+</head>
 <body>
+<script src="firebase.js"></script>
 <div class="dashboard-page">
-<nav class="sidebar">
-  <div class="logo">Goldet</div>
-  <div class="side-link" onclick="location.href='dashboard.html'">🏆 Stats</div>
-  <div class="side-link" onclick="location.href='leaderboard.html'">📋 Leaderboard</div>
-  <div class="side-link" onclick="location.href='chat.html'">💬 Chat</div>
-  <div class="side-link" onclick="location.href='clans.html'">👥 Clans</div>
-  <div class="side-link" onclick="location.href='market.html'">🛒 Market</div>
-  <div class="side-link" onclick="location.href='inventory.html'">📦 Inventory</div>
-  <div class="side-link" onclick="logout()">🔓 Logout</div>
-</nav>
-<main class="main-area">
-  <div class="top-userbar">
-    <div class="user-card"><div class="pfp"></div><div><h2 id="usernameField">Loading...</h2><span style="color:#7a6534;font-size:14px;" id="rankField">...</span></div></div>
-  </div>
-  <section class="section-box">
-    <div class="friends-title">Leaderboard</div>
-    <div id="leaderboardList"></div>
-  </section>
-</main>
+  <nav class="sidebar">
+    <div class="logo">Goldet</div>
+    <div class="side-link" onclick="location.href='dashboard.html'">🏆 Stats</div>
+    <div class="side-link" onclick="location.href='leaderboard.html'">📋 Leaderboard</div>
+  </nav>
+
+  <main class="main-area">
+    <div class="top-userbar"><div class="user-card"><h2>Leaderboard</h2></div></div>
+    <section class="stats-box">
+      <table class="table" id="leaderboardTable"><thead><tr><th>Rank</th><th>Username</th><th>Tokens</th></tr></thead><tbody></tbody></table>
+    </section>
+  </main>
 </div>
-<script type="module" src="firebase.js"></script>
-<script type="module" src="leaderboard.js"></script>
+
+<script>
+document.addEventListener('GoldetDBReady', async ()=> {
+  const db = GoldetDB.db;
+  const snap = await db.ref('users').get();
+  const data = snap.val() || {};
+  const arr = Object.entries(data).map(([k,v]) => ({username: v.username||k, tokens: v.tokens||0})).sort((a,b)=>b.tokens-a.tokens);
+  const tbody = document.querySelector('#leaderboardTable tbody');
+  tbody.innerHTML = '';
+  arr.forEach((u,i) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${i+1}</td><td>${u.username}</td><td>${u.tokens}</td>`;
+    tbody.appendChild(tr);
+  });
+});
+</script>
 </body>
 </html>
