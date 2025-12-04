@@ -1,149 +1,41 @@
-:root {
-  --gold-50: #fff8ec;
-  --gold-100: #fff0d1;
-  --gold-200: #f5d78a;
-  --gold-300: #e6b23a;
-  --gold-400: #d69a00;
-  --gold-500: #b57900;
-  --gold-600: #9a5f00;
-  --bg-gradient: linear-gradient(180deg, #f9f5ed, #eae0c8);
-  --accent-dark: rgba(30,20,10,0.85);
-  --white: #ffffff;
+/* styles.css - Goldet theme (shared) */
+:root{
+  --gold-100: #fff8ec;
+  --gold-200: #fff0d1;
+  --gold-300: #f5d78a;
+  --gold-400: #e6b23a;
+  --gold-500: #d69a00;
+  --gold-600: #b57900;
   --muted: #8a6b2b;
-  --glass: rgba(255,255,255,0.06);
-  font-synthesis: none;
 }
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;color:#4a3a16;background:linear-gradient(180deg,#f9f5ed,#efe2b9)}
+a{color:inherit;text-decoration:none}
 
-* { box-sizing: border-box; }
-html, body { margin:0; padding:0; font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; height: 100%; color: var(--muted); }
-a { color: inherit; text-decoration: none; }
-
-/* === Layout === */
-.dashboard-page { display: flex; min-height: 100vh; }
-.sidebar {
-  width: 240px;
-  background: linear-gradient(180deg, #e4c57a, #caa247);
-  padding: 28px 18px;
-  box-shadow: 4px 0 16px rgba(0,0,0,0.15);
-  position: relative;
-  z-index: 10;
-}
-.sidebar .logo {
-  font-family: 'Fredoka One';
-  font-size: 38px;
-  color: #6a4d11;
-  margin-bottom: 28px;
-}
-.side-link {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
-  border-radius: 8px;
-  font-weight: 600;
-  margin-bottom: 8px;
-  cursor: pointer;
-  color: #4f3e12;
-  background: rgba(255,255,255,0.18);
-  transition: 0.15s;
-}
-.side-link:hover { background: rgba(255,255,255,0.32); }
-
-.main-area {
-  flex: 1;
-  padding: 28px 38px;
-  background: var(--bg-gradient);
-  overflow-y: auto;
-}
-
-/* === Top User Card === */
-.top-userbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 28px;
-}
-.user-card {
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  background: linear-gradient(180deg,#fff3d5,#f1d79b);
-  padding: 14px 20px;
-  border-radius: 12px;
-  box-shadow: 0 8px 22px rgba(0,0,0,0.08);
-}
-.user-card .pfp {
-  width: 70px;
-  height: 70px;
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: inset 0 0 8px rgba(0,0,0,0.15);
-}
-.user-card h2 { margin:0; font-family: 'Fredoka One'; color:#a7740c; font-size:26px; }
-
-/* === Stats Cards === */
-.stats-box {
-  background: var(--gold-50);
-  border-radius: 14px;
-  padding: 16px 22px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.07);
-  margin-bottom: 24px;
-}
-.stats-row {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-}
-.stat-card {
-  background: linear-gradient(180deg,#fff7dc,#f3e2b7);
-  padding: 18px;
-  border-radius: 12px;
-  text-align: center;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.05);
-}
-.stat-card .label { font-size: 14px; color: #7a6534; margin-bottom: 6px; }
-.stat-card .value { font-family: 'Fredoka One'; font-size:26px; color:#c08a12; }
-
-/* === Section Boxes === */
-.section-box {
-  background: var(--gold-50);
-  border-radius: 14px;
-  padding: 20px;
-  margin-bottom: 24px;
-  box-shadow: 0 8px 22px rgba(0,0,0,0.08);
-}
-.friends-title {
-  font-family: 'Fredoka One';
-  color:#a57411;
-  margin-bottom:14px;
-  font-size:24px;
-}
-
-/* === Cards === */
-.friend-item, .leader-item, .chat-message, .clan-item, .market-item, .inventory-item {
-  background: var(--gold-100);
-  border-radius: 12px;
-  padding: 8px 12px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-}
-.friend-pfp { width:48px; height:48px; background:#fff; border-radius:8px; }
-
-.market-item img, .inventory-item img { width:48px; height:48px; border-radius:8px; object-fit:cover; margin-right:12px; }
-
-h1,h2,h3,h4,h5,h6 { font-family:'Fredoka One'; color:#a7740c; margin:0; }
-p,span { font-family:'Inter',sans-serif; color:#7a6534; margin:0; }
-
-.main-area::-webkit-scrollbar { width:8px; }
-.main-area::-webkit-scrollbar-thumb { background: rgba(180,120,10,0.5); border-radius:4px; }
-
-@media(max-width:980px){
-  .sidebar{width:100%; padding:18px;}
-  .main-area{padding:20px;}
-  .stats-row{grid-template-columns:repeat(2,1fr);}
-}
-@media(max-width:640px){
-  .stats-row{grid-template-columns:1fr;}
-}
+.dashboard-page{display:flex;min-height:100vh}
+.sidebar{width:240px;background:linear-gradient(180deg,#e4c57a,#caa247);padding:28px 18px;box-shadow:4px 0 16px rgba(0,0,0,0.15);position:relative;z-index:10}
+.logo{font-family:'Fredoka One',sans-serif;font-size:36px;color:#6a4d11;margin-bottom:20px}
+.side-link{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;font-weight:600;margin-bottom:8px;cursor:pointer;color:#4f3e12;background:rgba(255,255,255,0.12)}
+.side-link:hover{background:rgba(255,255,255,0.28)}
+.main-area{flex:1;padding:28px 38px;overflow:auto}
+.top-userbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:28px}
+.user-card{display:flex;align-items:center;gap:18px;background:linear-gradient(180deg,#fff3d5,#f1d79b);padding:14px 20px;border-radius:12px;box-shadow:0 8px 22px rgba(0,0,0,0.08)}
+.user-card h2{margin:0;font-family:"Fredoka One";color:#a7740c;font-size:22px}
+.stats-box{background:var(--gold-100);border-radius:14px;padding:16px 22px;box-shadow:0 10px 30px rgba(0,0,0,0.07);margin-bottom:18px}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.stat-card{background:linear-gradient(180deg,#fff7dc,#f3e2b7);padding:18px;border-radius:12px;text-align:center;box-shadow:0 8px 20px rgba(0,0,0,0.05)}
+.stat-card .label{font-size:14px;color:var(--muted);margin-bottom:6px}
+.stat-card .value{font-family:"Fredoka One";font-size:24px;color:#c08a12}
+.friends-section{background:var(--gold-100);padding:20px;border-radius:14px;box-shadow:0 8px 20px rgba(0,0,0,0.06)}
+.friends-title{font-family:"Fredoka One";color:#a57411;margin-bottom:14px;font-size:20px}
+.friend-item{background:#fff3d2;border-radius:12px;padding:8px;display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.friend-pfp{width:48px;height:48px;background:white;border-radius:8px}
+.controls-row{display:flex;gap:12px;margin-top:12px}
+.btn{padding:10px 14px;border-radius:8px;border:none;cursor:pointer;font-weight:600}
+.btn.primary{background:linear-gradient(180deg,var(--gold-400),var(--gold-500));color:white}
+.small{padding:6px 8px;font-size:14px}
+.popup{position:fixed;inset:0;background:rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center}
+.popup .inner{background:var(--gold-100);padding:18px;border-radius:10px;min-width:320px}
+.table{width:100%;border-collapse:collapse}
+.table td,.table th{padding:8px;border-bottom:1px solid rgba(0,0,0,0.04)}
+.card{background:var(--gold-100);padding:12px;border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,0.06);margin-bottom:12px}
